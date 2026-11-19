@@ -1,2 +1,26 @@
 sargun20-e5f0e5945226.json
 .env
+
+# Virtual environments
+venv/
+.venv/
+.venv_new/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pkl
+
+# macOS
+.DS_Store
+
+# Backups & zips
+*.zip
+*.bak
+mongo_backup*.py
+mongo.old.py
+
+# VS Code
+.vscode/

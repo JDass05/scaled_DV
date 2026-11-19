@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Jaspreet",
+    "url": "https://api.thingspeak.com/channels/3422508/feeds.json?api_key=SFAX8EYS3JHYXR65&results=2000",
+    "locations": {
+      "Jaspreet": {
+        "A": {
+          "lat": 30.94,
+          "lon": 76.46
+        },
+        "B": {
+          "lat": 30.94,
+          "lon": 76.46
+        }
+      }
+    }
+  },
+  {
+    "name": "Netar",
+    "url": "https://api.thingspeak.com/channels/3433076/feeds.json?api_key=5VIAY723PXM26PIQ&results=2000",
+    "locations": {
+      "Netar": {
+        "A": {
+          "lat": 30.4179,
+          "lon": 76.3577
+        },
+        "B": {
+          "lat": 30.4179,
+          "lon": 76.3577
+        }
+      }
+    }
+  },
+  {
+    "name": "Muktiyar",
+    "url": "https://api.thingspeak.com/channels/3433593/feeds.json?api_key=A928FSROAPCWPGAT&results=2000",
+    "locations": {
+      "Muktiyar": {
+        "A": {
+          "lat": 30.4179,
+          "lon": 76.3577
+        },
+        "B": {
+          "lat": 30.4179,
+          "lon": 76.3577
+        }
+      }
+    }
+  }
+]
