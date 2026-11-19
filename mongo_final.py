@@ -471,11 +471,31 @@ def make_prediction():
             "K": float(prediction[0][2])
         }
 
+        def clean_doc(doc):
+            if not doc:
+                return None
+            cleaned = {}
+            for k, v in doc.items():
+                if k == '_id':
+                    continue
+                if isinstance(v, (datetime.datetime, datetime.date)):
+                    cleaned[k] = v.isoformat()
+                else:
+                    cleaned[k] = v
+            return cleaned
+
+        all_data = {
+            "thingspeak": clean_doc(thingspeak_data),
+            "nasa": clean_doc(nasa_data),
+            "gee": clean_doc(gee_data)
+        }
+
         return jsonify({
             "farmer": farmer,
             "field": field,
             "prediction": result,
-            "input_features": feature_data
+            "input_features": feature_data,
+            "all_data": all_data
         })
 
     except Exception as e:
