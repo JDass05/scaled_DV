@@ -443,7 +443,6 @@ def make_prediction():
             "T2M": nasa_data["T2M"],
             "RH2M": nasa_data["RH2M"],
             "PS": nasa_data["PS"],
-            "NDVI": gee_data["NDVI"],
             "ARI": gee_data["ARI"],
             "CAI": gee_data["CAI"],
             "CIRE": gee_data["CIRE"],
@@ -459,7 +458,7 @@ def make_prediction():
 
         # The model expects these exact columns in this exact order
         columns = [
-            'T2M', 'RH2M', 'PS', 'NDVI', 'ARI', 'CAI', 'CIRE', 'DWSI', 'EVI', 'GCVI', 'MCARI', 'SIPI',
+            'T2M', 'RH2M', 'PS', 'ARI', 'CAI', 'CIRE', 'DWSI', 'EVI', 'GCVI', 'MCARI', 'SIPI',
             'pH', 'Temperature (Centigrate)', 'EC (microsiemens per cm)'
         ]
         
