@@ -503,6 +503,64 @@ def make_prediction():
             "error": str(e)
         }), 500
 
+@app.route('/get_history', methods=['GET'])
+@app.route('/get_history/<farmer>/<field>', methods=['GET'])
+def get_history(farmer=None, field=None):
+    try:
+        farmer = farmer or request.args.get("farmer")
+        field = field or request.args.get("field")
+        days = request.args.get("days", default=7, type=int)
+
+        if not farmer or not field:
+            return jsonify({
+                "error": "farmer and field parameters are required"
+            }), 400
+
+        start_date = datetime.datetime.utcnow() - datetime.timedelta(days=days)
+
+        query = {
+            "farmer": farmer,
+            "field": field,
+            "timestamp": {"$gte": start_date}
+        }
+
+        # Fetch records sorted newest to oldest, excluding MongoDB internal _id
+        ts_cursor = thingspeak_collection.find(query, {"_id": 0}).sort("timestamp", -1)
+        nasa_cursor = nasa_collection.find(query, {"_id": 0}).sort("timestamp", -1)
+        gee_cursor = gee_collection.find(query, {"_id": 0}).sort("timestamp", -1)
+
+        def serialize_item(item):
+            for k, v in item.items():
+                if isinstance(v, (datetime.datetime, datetime.date)):
+                    item[k] = v.isoformat()
+            return item
+
+        ts_data = [serialize_item(doc) for doc in ts_cursor]
+        nasa_data = [serialize_item(doc) for doc in nasa_cursor]
+        gee_data = [serialize_item(doc) for doc in gee_cursor]
+
+        return jsonify({
+            "farmer": farmer,
+            "field": field,
+            "days": days,
+            "since": start_date.isoformat(),
+            "count": {
+                "thingspeak": len(ts_data),
+                "nasa": len(nasa_data),
+                "gee": len(gee_data)
+            },
+            "data": {
+                "thingspeak": ts_data,
+                "nasa": nasa_data,
+                "gee": gee_data
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
+
 if __name__ == '__main__':
     fetch_all_thingspeak_data()
     fetch_and_store_nasa_data()
