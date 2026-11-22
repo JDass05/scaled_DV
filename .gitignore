@@ -22,5 +22,10 @@ __pycache__/
 mongo_backup*.py
 mongo.old.py
 
+# Node / Frontend
+node_modules/
+dist/
+.vite/
+
 # VS Code
 .vscode/
