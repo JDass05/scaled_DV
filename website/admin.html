@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Aahar – Admin Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  body { font-family: 'Inter', sans-serif; background: #f0fdf4; }
+  .hindi { font-family: 'Tiro Devanagari Hindi', serif; }
+  .sidebar { transition: width 0.3s ease; }
+  .nav-link { transition: background 0.15s, color 0.15s; }
+  .nav-link.active { background: #d1fae5; color: #065f46; font-weight: 600; }
+  .nav-link:hover:not(.active) { background: #f0fdf4; }
+  .card { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.07); }
+  .stat-card { border-left: 4px solid; }
+  .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .table-row { transition: background 0.1s; }
+  .table-row:hover { background: #f0fdf4; }
+  select, input[type=text], input[type=date] { transition: border-color 0.2s, box-shadow 0.2s; }
+  select:focus, input:focus { outline: none; border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.12); }
+  .tab-btn { transition: all 0.2s; }
+  .tab-btn.active { background: #059669; color: white; }
+  .spinner { border: 3px solid #e5e7eb; border-top-color: #059669; border-radius: 50%; width: 28px; height: 28px; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .section { display: none; }
+  .section.active { display: block; }
+  .tooltip { position: relative; }
+  .tooltip-text { visibility: hidden; opacity: 0; transition: opacity 0.2s; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    background: #1f2937; color: white; font-size: 11px; white-space: nowrap; padding: 4px 8px; border-radius: 6px; pointer-events: none; z-index: 50; }
+  .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Auth Guard -->
+<script>
+const _u = sessionStorage.getItem('aahar_user');
+if (!_u) window.location.href = 'login.html';
+const _user = JSON.parse(_u || '{}');
+if (_user.role !== 'admin') window.location.href = 'farmer.html';
+</script>
+
+<div class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-white shadow-md flex flex-col flex-shrink-0 z-20">
+    <div class="p-6 border-b border-gray-100">
+      <h1 class="text-3xl font-bold hindi text-green-800">आहार</h1>
+      <span class="text-xs text-gray-400 tracking-widest uppercase font-medium mt-1 block">Admin Portal</span>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <a class="nav-link active flex items-center px-4 py-2.5 rounded-xl text-sm text-gray-700 cursor-pointer" onclick="showSection('dashboard')">
+        <span class="material-icons text-xl mr-3">dashboard</span> Dashboard
+      </a>
+      <a class="nav-link flex items-center px-4 py-2.5 rounded-xl text-sm text-gray-700 cursor-pointer" onclick="showSection('all-farmers')">
+        <span class="material-icons text-xl mr-3">groups</span> All Farmers
+      </a>
+      <a class="nav-link flex items-center px-4 py-2.5 rounded-xl text-sm text-gray-700 cursor-pointer" onclick="showSection('sensor-data')">
+        <span class="material-icons text-xl mr-3">sensors</span> Sensor Data
+      </a>
+      <a class="nav-link flex items-center px-4 py-2.5 rounded-xl text-sm text-gray-700 cursor-pointer" onclick="showSection('npk-reports')">
+        <span class="material-icons text-xl mr-3">analytics</span> NPK Reports
+      </a>
+      <a class="nav-link flex items-center px-4 py-2.5 rounded-xl text-sm text-gray-700 cursor-pointer" onclick="showSection('history')">
+        <span class="material-icons text-xl mr-3">history</span> Data History
+      </a>
+      <a class="nav-link flex items-center px-4 py-2.5 rounded-xl text-sm text-gray-700 cursor-pointer" onclick="showSection('satellite')">
+        <span class="material-icons text-xl mr-3">satellite_alt</span> Satellite / GEE
+      </a>
+    </nav>
+    <div class="p-3 border-t border-gray-100">
+      <div class="flex items-center px-3 py-2 mb-2">
+        <div class="w-9 h-9 bg-green-700 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">A</div>
+        <div>
+          <p class="text-sm font-semibold text-gray-800">Administrator</p>
+          <p class="text-xs text-gray-400">admin</p>
+        </div>
+      </div>
+      <a onclick="logout()" class="nav-link flex items-center px-4 py-2.5 rounded-xl text-sm text-red-500 cursor-pointer hover:bg-red-50">
+        <span class="material-icons text-xl mr-3">logout</span> Logout
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+
+    <!-- TOPBAR -->
+    <header class="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between flex-shrink-0 z-10">
+      <div>
+        <h2 class="text-xl font-bold text-gray-800" id="page-title">Dashboard</h2>
+        <p class="text-xs text-gray-400" id="page-sub">Overview of all farm data</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-3 py-1.5">
+          <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+          <span class="text-xs text-green-700 font-medium">Live Data</span>
+        </div>
+        <button onclick="refreshAll()" class="flex items-center gap-1 text-sm text-gray-500 hover:text-green-700 transition">
+          <span class="material-icons text-lg">refresh</span>
+        </button>
+        <span class="text-xs text-gray-400" id="last-update">--</span>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6">
+
+      <!-- =================== DASHBOARD =================== -->
+      <div id="sec-dashboard" class="section active space-y-6">
+
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="card stat-card border-green-500 p-5">
+            <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Farmers</p>
+            <p class="text-3xl font-bold text-gray-800">3</p>
+            <p class="text-xs text-green-600 mt-1 flex items-center gap-1"><span class="material-icons text-xs">check_circle</span>All active</p>
+          </div>
+          <div class="card stat-card border-blue-500 p-5">
+            <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Total Fields</p>
+            <p class="text-3xl font-bold text-gray-800" id="stat-fields">--</p>
+            <p class="text-xs text-blue-600 mt-1">Jaspreet: 2, Others: 1 each</p>
+          </div>
+          <div class="card stat-card border-yellow-500 p-5">
+            <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Data Sources</p>
+            <p class="text-3xl font-bold text-gray-800">3</p>
+            <p class="text-xs text-yellow-600 mt-1">ThingSpeak · NASA · GEE</p>
+          </div>
+          <div class="card stat-card border-purple-500 p-5">
+            <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">System</p>
+            <p class="text-3xl font-bold text-gray-800">OK</p>
+            <p class="text-xs text-purple-600 mt-1" id="stat-ts">Checking...</p>
+          </div>
+        </div>
+
+        <!-- Farmer Summary Cards -->
+        <h3 class="text-base font-semibold text-gray-700">Farmer Field Summary</h3>
+        <div id="dashboard-cards" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="card p-6 flex items-center justify-center"><div class="spinner"></div></div>
+        </div>
+
+        <!-- NPK Overview Chart -->
+        <div class="card p-6">
+          <h3 class="text-base font-semibold text-gray-700 mb-4">NPK Prediction Overview</h3>
+          <canvas id="npk-chart" height="100"></canvas>
+        </div>
+      </div>
+
+      <!-- =================== ALL FARMERS =================== -->
+      <div id="sec-all-farmers" class="section space-y-5">
+        <!-- Filters -->
+        <div class="card p-5 flex flex-wrap gap-4 items-end">
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Farmer</label>
+            <select id="filter-farmer" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[150px]" onchange="applyFilters()">
+              <option value="">All Farmers</option>
+              <option>Jaspreet</option>
+              <option>Netar</option>
+              <option>Muktiyar</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Field</label>
+            <select id="filter-field" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[120px]" onchange="applyFilters()">
+              <option value="">All Fields</option>
+              <option>A</option>
+              <option>B</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Data Source</label>
+            <select id="filter-source" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[150px]" onchange="applyFilters()">
+              <option value="thingspeak">ThingSpeak (Sensors)</option>
+              <option value="nasa">NASA LaRC</option>
+              <option value="gee">GEE / Satellite</option>
+            </select>
+          </div>
+          <button onclick="exportCSV()" class="ml-auto flex items-center gap-2 bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-green-800 transition">
+            <span class="material-icons text-sm">download</span> Export CSV
+          </button>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-700" id="table-title">Sensor Data — All Farmers</h3>
+            <span id="table-count" class="text-xs text-gray-400"></span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                  <th class="text-left px-5 py-3">Farmer</th>
+                  <th class="text-left px-5 py-3">Field</th>
+                  <th class="text-left px-5 py-3" id="col3">Soil pH</th>
+                  <th class="text-left px-5 py-3" id="col4">Soil Moist.</th>
+                  <th class="text-left px-5 py-3" id="col5">Soil Temp (°C)</th>
+                  <th class="text-left px-5 py-3" id="col6">EC (µS/cm)</th>
+                  <th class="text-left px-5 py-3" id="col7">Nutrient N</th>
+                  <th class="text-left px-5 py-3" id="col8">Nutrient P</th>
+                  <th class="text-left px-5 py-3" id="col9">Nutrient K</th>
+                  <th class="text-left px-5 py-3">Updated</th>
+                </tr>
+              </thead>
+              <tbody id="farmers-table-body">
+                <tr><td colspan="10" class="text-center py-10"><div class="flex justify-center"><div class="spinner"></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================== SENSOR DATA =================== -->
+      <div id="sec-sensor-data" class="section space-y-5">
+        <div class="card p-5 flex flex-wrap gap-4 items-end">
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Farmer</label>
+            <select id="sd-farmer" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[150px]" onchange="loadSensorCards()">
+              <option value="">All Farmers</option>
+              <option>Jaspreet</option>
+              <option>Netar</option>
+              <option>Muktiyar</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Field</label>
+            <select id="sd-field" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[120px]" onchange="loadSensorCards()">
+              <option value="">All Fields</option>
+              <option>A</option>
+              <option>B</option>
+            </select>
+          </div>
+        </div>
+        <div id="sensor-cards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div class="card p-5 col-span-full flex items-center justify-center py-12"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <!-- =================== NPK REPORTS =================== -->
+      <div id="sec-npk-reports" class="section space-y-5">
+        <div class="card p-5 flex flex-wrap gap-4 items-center">
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Farmer</label>
+            <select id="npk-farmer" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[150px]">
+              <option>Jaspreet</option>
+              <option>Netar</option>
+              <option>Muktiyar</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Field</label>
+            <select id="npk-field" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[120px]">
+              <option>A</option>
+              <option>B</option>
+            </select>
+          </div>
+          <button onclick="loadNPK()" class="mt-4 flex items-center gap-2 bg-green-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl hover:bg-green-800 transition">
+            <span class="material-icons text-sm">calculate</span> Run Prediction
+          </button>
+        </div>
+
+        <div id="npk-result" class="hidden">
+          <div class="grid grid-cols-3 gap-4 mb-5">
+            <div class="card p-6 text-center border-t-4 border-green-500">
+              <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Nitrogen (N)</p>
+              <p class="text-4xl font-bold text-green-700" id="npk-n">--</p>
+              <p class="text-xs text-gray-400 mt-1">kg/ha (predicted)</p>
+            </div>
+            <div class="card p-6 text-center border-t-4 border-blue-500">
+              <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Phosphorus (P)</p>
+              <p class="text-4xl font-bold text-blue-700" id="npk-p">--</p>
+              <p class="text-xs text-gray-400 mt-1">kg/ha (predicted)</p>
+            </div>
+            <div class="card p-6 text-center border-t-4 border-yellow-500">
+              <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Potassium (K)</p>
+              <p class="text-4xl font-bold text-yellow-700" id="npk-k">--</p>
+              <p class="text-xs text-gray-400 mt-1">kg/ha (predicted)</p>
+            </div>
+          </div>
+
+          <div class="card p-6">
+            <h3 class="text-sm font-semibold text-gray-600 mb-4">Input Features Used</h3>
+            <div id="npk-features" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+          </div>
+        </div>
+
+        <div id="npk-error" class="hidden card p-6 border border-red-200 bg-red-50">
+          <div class="flex items-center gap-2 text-red-600 font-medium"><span class="material-icons">error</span><span id="npk-err-msg"></span></div>
+        </div>
+        <div id="npk-loading" class="hidden card p-10 flex items-center justify-center"><div class="spinner mx-auto"></div></div>
+      </div>
+
+      <!-- =================== HISTORY =================== -->
+      <div id="sec-history" class="section space-y-5">
+        <div class="card p-5 flex flex-wrap gap-4 items-end">
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Farmer</label>
+            <select id="hist-farmer" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[150px]">
+              <option value="">All Farmers</option>
+              <option>Jaspreet</option>
+              <option>Netar</option>
+              <option>Muktiyar</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Field</label>
+            <select id="hist-field" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[120px]">
+              <option value="">All Fields</option>
+              <option>A</option>
+              <option>B</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Data Source</label>
+            <select id="hist-source" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[150px]">
+              <option value="thingspeak">ThingSpeak</option>
+              <option value="nasa">NASA LaRC</option>
+              <option value="gee">GEE</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Time Range</label>
+            <select id="hist-days" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white">
+              <option value="7">Past 7 days</option>
+              <option value="14">Past 14 days</option>
+              <option value="30" selected>Past 30 days</option>
+              <option value="60">Past 60 days</option>
+            </select>
+          </div>
+          <button onclick="loadHistory()" class="flex items-center gap-2 bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-green-800 transition">
+            <span class="material-icons text-sm">search</span> Fetch History
+          </button>
+          <button onclick="exportHistoryCSV()" class="flex items-center gap-2 border border-gray-200 text-gray-600 text-sm font-medium px-4 py-2 rounded-xl hover:bg-gray-50 transition">
+            <span class="material-icons text-sm">download</span> Export
+          </button>
+        </div>
+        <div class="card overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-700">Historical Records</h3>
+            <span id="hist-count" class="text-xs text-gray-400"></span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead><tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider" id="hist-thead">
+                <th class="text-left px-5 py-3">Farmer</th>
+                <th class="text-left px-5 py-3">Field</th>
+                <th class="text-left px-5 py-3">Timestamp</th>
+              </tr></thead>
+              <tbody id="hist-body"><tr><td colspan="20" class="text-center py-10 text-gray-400">Select filters and click Fetch History</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================== SATELLITE/GEE =================== -->
+      <div id="sec-satellite" class="section space-y-5">
+        <div class="card p-5 flex flex-wrap gap-4 items-end">
+          <div>
+            <label class="text-xs font-medium text-gray-500 uppercase mb-1 block">Farmer</label>
+            <select id="gee-farmer" class="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white min-w-[150px]" onchange="loadGEE()">
+              <option value="">All Farmers</option>
+              <option>Jaspreet</option>
+              <option>Netar</option>
+              <option>Muktiyar</option>
+            </select>
+          </div>
+        </div>
+        <div id="gee-cards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div class="card p-5 col-span-full flex items-center justify-center py-12"><div class="spinner"></div></div>
+        </div>
+        <div class="card p-6">
+          <h3 class="text-sm font-semibold text-gray-600 mb-4">NASA LaRC Weather Data</h3>
+          <div id="nasa-cards" class="grid grid-cols-3 gap-4">
+            <div class="card p-5 col-span-full flex items-center justify-center py-8"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+const API = 'https://scaled-dv.onrender.com';
+let allData = null;
+let historyData = [];
+
+// Robust fetch that talks to Render, with transparent fallback
+async function apiFetch(path) {
+  try {
+    const res = await fetch(`${API}${path}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    try {
+      const res = await fetch(`/api${path}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (e2) {
+      throw err;
+    }
+  }
+}
+
+// --- AUTH ---
+function logout() { sessionStorage.removeItem('aahar_user'); window.location.href = 'login.html'; }
+
+// --- NAVIGATION ---
+const sections = ['dashboard','all-farmers','sensor-data','npk-reports','history','satellite'];
+const titles = {
+  'dashboard': ['Dashboard','Overview of all farm data'],
+  'all-farmers': ['All Farmers','Filter and export data across all farmers'],
+  'sensor-data': ['Sensor Data','Real-time ThingSpeak sensor readings'],
+  'npk-reports': ['NPK Reports','AI-powered NPK predictions'],
+  'history': ['Data History','Historical records from all data sources'],
+  'satellite': ['Satellite / GEE','Google Earth Engine & NASA LaRC satellite data']
+};
+
+function showSection(id) {
+  sections.forEach(s => {
+    document.getElementById('sec-'+s).classList.remove('active');
+    document.querySelectorAll('.nav-link')[sections.indexOf(s)].classList.remove('active');
+  });
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('.nav-link')[sections.indexOf(id)].classList.add('active');
+  document.getElementById('page-title').textContent = titles[id][0];
+  document.getElementById('page-sub').textContent = titles[id][1];
+  if (id === 'all-farmers' || id === 'sensor-data') loadSection(id);
+  if (id === 'satellite') loadGEE();
+}
+
+// --- DATA FETCH ---
+async function fetchAll(farmer='', field='') {
+  let url = `/get_all_data`;
+  const params = [];
+  if (farmer) params.push(`farmer=${encodeURIComponent(farmer)}`);
+  if (field) params.push(`field=${encodeURIComponent(field)}`);
+  if (params.length) url += '?' + params.join('&');
+  return await apiFetch(url);
+}
+
+function fmt(val, dec=2) {
+  if (val === undefined || val === null || val === 'N/A') return '<span class="text-gray-300">—</span>';
+  const n = parseFloat(val);
+  if (isNaN(n)) return String(val);
+  return n.toFixed(dec);
+}
+
+function fmtDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts.$date || ts);
+  if (isNaN(d)) return '—';
+  return d.toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+function statusBadge(val, low, high) {
+  if (val === null || val === undefined || val === 'N/A') return '<span class="badge bg-gray-100 text-gray-400">N/A</span>';
+  const n = parseFloat(val);
+  if (isNaN(n)) return '<span class="badge bg-gray-100 text-gray-400">N/A</span>';
+  if (n < low) return '<span class="badge bg-blue-100 text-blue-700">Low</span>';
+  if (n > high) return '<span class="badge bg-red-100 text-red-700">High</span>';
+  return '<span class="badge bg-green-100 text-green-700">Normal</span>';
+}
+
+// --- DASHBOARD ---
+async function loadDashboard() {
+  try {
+    allData = await fetchAll();
+    renderDashboardCards();
+    renderNPKChart();
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('en-IN');
+    document.getElementById('stat-ts').textContent = 'ThingSpeak connected';
+    const tsData = allData['ThingSpeak Data'];
+    let fields = 0;
+    if (typeof tsData === 'object') {
+      Object.values(tsData).forEach(f => { fields += Object.keys(f).length; });
+    }
+    document.getElementById('stat-fields').textContent = fields || 4;
+  } catch(e) {
+    document.getElementById('dashboard-cards').innerHTML = `<div class="card p-6 col-span-3 text-center text-red-500">Failed to load data: ${e.message}</div>`;
+    document.getElementById('stat-ts').textContent = 'Connection error';
+  }
+}
+
+function renderDashboardCards() {
+  const tsData = allData['ThingSpeak Data'];
+  const nasaData = allData['NASA LaRC Data'];
+  if (!tsData || tsData === 'No Data Available') {
+    document.getElementById('dashboard-cards').innerHTML = '<div class="card p-6 col-span-3 text-center text-gray-400">No sensor data available</div>';
+    return;
+  }
+  const farmerColors = { 'Jaspreet':'green', 'Netar':'blue', 'Muktiyar':'yellow' };
+  let html = '';
+  for (const [farmer, fields] of Object.entries(tsData)) {
+    const c = farmerColors[farmer] || 'gray';
+    for (const [field, d] of Object.entries(fields)) {
+      const nasa = nasaData?.[farmer]?.[field] || {};
+      html += `
+      <div class="card p-5 hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h4 class="font-bold text-gray-800">${farmer}</h4>
+            <p class="text-xs text-gray-400">Field ${field}</p>
+          </div>
+          <span class="badge bg-${c}-100 text-${c}-700">${field}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-gray-50 rounded-lg p-2">
+            <p class="text-gray-400">Soil pH</p>
+            <p class="font-bold text-gray-700">${fmt(d.hp,1)}</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-2">
+            <p class="text-gray-400">Soil Temp</p>
+            <p class="font-bold text-gray-700">${fmt(d.t,1)} °C</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-2">
+            <p class="text-gray-400">EC</p>
+            <p class="font-bold text-gray-700">${fmt(d.c,1)} µS</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-2">
+            <p class="text-gray-400">Air Temp</p>
+            <p class="font-bold text-gray-700">${fmt(nasa.T2M,1)} °C</p>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+          <span class="text-xs text-gray-400">${fmtDate(d.timestamp)}</span>
+          <span class="text-xs font-medium text-green-600 cursor-pointer hover:underline" onclick="showSection('npk-reports'); document.getElementById('npk-farmer').value='${farmer}'; document.getElementById('npk-field').value='${field}'; loadNPK();">
+            → NPK
+          </span>
+        </div>
+      </div>`;
+    }
+  }
+  document.getElementById('dashboard-cards').innerHTML = html;
+}
+
+async function renderNPKChart() {
+  const farmers = ['Jaspreet','Netar','Muktiyar'];
+  const fields = [['A','B'],['A'],['A']];
+  const nVals=[], pVals=[], kVals=[], labels=[];
+  for (let i=0; i<farmers.length; i++) {
+    for (const f of fields[i]) {
+      try {
+        const d = await apiFetch(`/predict?farmer=${farmers[i]}&field=${f}`);
+        if (d.prediction) {
+          labels.push(`${farmers[i]}-${f}`);
+          nVals.push(+d.prediction.N.toFixed(1));
+          pVals.push(+d.prediction.P.toFixed(1));
+          kVals.push(+d.prediction.K.toFixed(1));
+        }
+      } catch {}
+    }
+  }
+  if (!labels.length) return;
+  const ctx = document.getElementById('npk-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'N (Nitrogen)', data:nVals, backgroundColor:'rgba(5,150,105,0.7)', borderRadius:6 },
+        { label:'P (Phosphorus)', data:pVals, backgroundColor:'rgba(59,130,246,0.7)', borderRadius:6 },
+        { label:'K (Potassium)', data:kVals, backgroundColor:'rgba(234,179,8,0.7)', borderRadius:6 }
+      ]
+    },
+    options: { responsive:true, plugins:{ legend:{ position:'top' } }, scales:{ y:{ beginAtZero:true } } }
+  });
+}
+
+// --- ALL FARMERS TABLE ---
+async function loadSection(id) {
+  if (!allData) allData = await fetchAll();
+  if (id === 'all-farmers') applyFilters();
+  if (id === 'sensor-data') loadSensorCards();
+}
+
+async function applyFilters() {
+  const farmer = document.getElementById('filter-farmer').value;
+  const field = document.getElementById('filter-field').value;
+  const source = document.getElementById('filter-source').value;
+  const tbody = document.getElementById('farmers-table-body');
+
+  tbody.innerHTML = '<tr><td colspan="10" class="text-center py-8"><div class="flex justify-center"><div class="spinner"></div></div></td></tr>';
+
+  try {
+    const data = await fetchAll(farmer, field);
+    allData = data;
+
+    let sourceKey = '';
+    if (source === 'thingspeak') sourceKey = 'ThingSpeak Data';
+    else if (source === 'nasa') sourceKey = 'NASA LaRC Data';
+    else sourceKey = 'GEE Data';
+
+    updateTableHeaders(source);
+    document.getElementById('table-title').textContent =
+      `${source === 'thingspeak' ? 'Sensor' : source === 'nasa' ? 'NASA LaRC' : 'GEE Satellite'} Data — ${farmer || 'All Farmers'} ${field ? '/ Field '+field : ''}`;
+
+    const src = data[sourceKey];
+    if (!src || src === 'No Data Available') {
+      tbody.innerHTML = '<tr><td colspan="10" class="text-center py-10 text-gray-400">No data available</td></tr>';
+      return;
+    }
+
+    let rows = '';
+    let count = 0;
+    for (const [fn, fields] of Object.entries(src)) {
+      for (const [fl, d] of Object.entries(fields)) {
+        rows += buildRow(source, fn, fl, d);
+        count++;
+      }
+    }
+    tbody.innerHTML = rows || '<tr><td colspan="10" class="text-center py-10 text-gray-400">No matching records</td></tr>';
+    document.getElementById('table-count').textContent = `${count} record(s)`;
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-red-400">Error: ${e.message}</td></tr>`;
+  }
+}
+
+function updateTableHeaders(source) {
+  if (source === 'thingspeak') {
+    document.getElementById('col3').textContent = 'Soil pH';
+    document.getElementById('col4').textContent = 'Moisture';
+    document.getElementById('col5').textContent = 'Soil Temp (°C)';
+    document.getElementById('col6').textContent = 'EC (µS/cm)';
+    document.getElementById('col7').textContent = 'N (raw)';
+    document.getElementById('col8').textContent = 'P (raw)';
+    document.getElementById('col9').textContent = 'K (raw)';
+  } else if (source === 'nasa') {
+    document.getElementById('col3').textContent = 'Air Temp (°C)';
+    document.getElementById('col4').textContent = 'Humidity (%)';
+    document.getElementById('col5').textContent = 'Pressure (kPa)';
+    document.getElementById('col6').textContent = 'Date';
+    document.getElementById('col7').textContent = '—';
+    document.getElementById('col8').textContent = '—';
+    document.getElementById('col9').textContent = '—';
+  } else {
+    document.getElementById('col3').textContent = 'NDVI';
+    document.getElementById('col4').textContent = 'EVI';
+    document.getElementById('col5').textContent = 'ARI';
+    document.getElementById('col6').textContent = 'CAI';
+    document.getElementById('col7').textContent = 'CIRE';
+    document.getElementById('col8').textContent = 'DWSI';
+    document.getElementById('col9').textContent = 'GCVI';
+  }
+}
+
+function buildRow(source, farmer, field, d) {
+  let cols = '';
+  if (source === 'thingspeak') {
+    cols = `<td class="px-5 py-3">${fmt(d.hp,2)}</td>
+            <td class="px-5 py-3">${fmt(d.m,2)}</td>
+            <td class="px-5 py-3">${fmt(d.t,1)}</td>
+            <td class="px-5 py-3">${fmt(d.c,2)}</td>
+            <td class="px-5 py-3">${fmt(d.n,1)}</td>
+            <td class="px-5 py-3">${fmt(d.p,1)}</td>
+            <td class="px-5 py-3">${fmt(d.k,1)}</td>`;
+  } else if (source === 'nasa') {
+    cols = `<td class="px-5 py-3">${fmt(d.T2M,2)}</td>
+            <td class="px-5 py-3">${fmt(d.RH2M,2)}</td>
+            <td class="px-5 py-3">${fmt(d.PS,3)}</td>
+            <td class="px-5 py-3">${d.date || '—'}</td>
+            <td class="px-5 py-3">—</td><td class="px-5 py-3">—</td><td class="px-5 py-3">—</td>`;
+  } else {
+    cols = `<td class="px-5 py-3">${fmt(d.NDVI,4)}</td>
+            <td class="px-5 py-3">${fmt(d.EVI,4)}</td>
+            <td class="px-5 py-3">${fmt(d.ARI,4)}</td>
+            <td class="px-5 py-3">${fmt(d.CAI,4)}</td>
+            <td class="px-5 py-3">${fmt(d.CIRE,4)}</td>
+            <td class="px-5 py-3">${fmt(d.DWSI,4)}</td>
+            <td class="px-5 py-3">${fmt(d.GCVI,4)}</td>`;
+  }
+  return `<tr class="table-row border-t border-gray-50 text-gray-700">
+    <td class="px-5 py-3 font-medium">${farmer}</td>
+    <td class="px-5 py-3"><span class="badge bg-green-100 text-green-700">Field ${field}</span></td>
+    ${cols}
+    <td class="px-5 py-3 text-xs text-gray-400">${fmtDate(d.timestamp)}</td>
+  </tr>`;
+}
+
+// --- EXPORT CSV ---
+function exportCSV() {
+  const rows = document.querySelectorAll('#farmers-table-body tr');
+  let csv = '';
+  const headers = Array.from(document.querySelectorAll('thead th')).map(h => h.textContent.trim()).join(',');
+  csv += headers + '\n';
+  rows.forEach(r => {
+    const cells = Array.from(r.querySelectorAll('td')).map(c => '"'+c.innerText.trim()+'"').join(',');
+    if (cells) csv += cells + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `aahar_data_${Date.now()}.csv`;
+  a.click();
+}
+
+// --- SENSOR CARDS ---
+async function loadSensorCards() {
+  const farmer = document.getElementById('sd-farmer').value;
+  const field = document.getElementById('sd-field').value;
+  const container = document.getElementById('sensor-cards');
+  container.innerHTML = '<div class="card p-5 col-span-full flex items-center justify-center py-12"><div class="spinner"></div></div>';
+  try {
+    const data = await fetchAll(farmer, field);
+    const ts = data['ThingSpeak Data'];
+    if (!ts || ts === 'No Data Available') {
+      container.innerHTML = '<div class="card p-6 col-span-full text-center text-gray-400">No sensor data</div>';
+      return;
+    }
+    const fields_map = { hp:'Soil pH', m:'Moisture', t:'Soil Temp (°C)', c:'EC (µS/cm)', n:'Nutrient N', p:'Nutrient P', k:'Nutrient K' };
+    const icons = { hp:'science', m:'water_drop', t:'device_thermostat', c:'electric_bolt', n:'grass', p:'agriculture', k:'spa' };
+    const colors = { hp:'purple', m:'blue', t:'orange', c:'yellow', n:'green', p:'teal', k:'indigo' };
+    const ranges = { hp:[5.5,7.5], m:[20,80], t:[10,35], c:[0,2000], n:[0,100], p:[0,100], k:[0,200] };
+
+    let html = '';
+    for (const [fn, flds] of Object.entries(ts)) {
+      for (const [fl, d] of Object.entries(flds)) {
+        for (const [key, label] of Object.entries(fields_map)) {
+          const val = d[key];
+          const fval = parseFloat(val);
+          const [lo, hi] = ranges[key];
+          const pct = isNaN(fval) ? 0 : Math.min(100, Math.max(0, ((fval-lo)/(hi-lo))*100));
+          const color = colors[key];
+          html += `<div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-${color}-100 flex items-center justify-center">
+                  <span class="material-icons text-${color}-600 text-base">${icons[key]}</span>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-700">${label}</p>
+                  <p class="text-xs text-gray-400">${fn} / Field ${fl}</p>
+                </div>
+              </div>
+            </div>
+            <p class="text-2xl font-bold text-gray-800">${isNaN(fval) ? '—' : fval.toFixed(1)}</p>
+            <div class="mt-2 h-1.5 bg-gray-100 rounded-full"><div class="h-1.5 bg-${color}-500 rounded-full" style="width:${pct}%"></div></div>
+          </div>`;
+        }
+      }
+    }
+    container.innerHTML = html || '<div class="card p-6 col-span-full text-center text-gray-400">No data</div>';
+  } catch(e) {
+    container.innerHTML = `<div class="card p-6 col-span-full text-center text-red-400">Error: ${e.message}</div>`;
+  }
+}
+
+// --- NPK ---
+async function loadNPK() {
+  const farmer = document.getElementById('npk-farmer').value;
+  const field = document.getElementById('npk-field').value;
+  document.getElementById('npk-result').classList.add('hidden');
+  document.getElementById('npk-error').classList.add('hidden');
+  document.getElementById('npk-loading').classList.remove('hidden');
+  try {
+    const d = await apiFetch(`/predict?farmer=${farmer}&field=${field}`);
+    document.getElementById('npk-loading').classList.add('hidden');
+    if (d.error) {
+      document.getElementById('npk-error').classList.remove('hidden');
+      document.getElementById('npk-err-msg').textContent = d.error;
+      return;
+    }
+    document.getElementById('npk-n').textContent = d.prediction.N.toFixed(2);
+    document.getElementById('npk-p').textContent = d.prediction.P.toFixed(2);
+    document.getElementById('npk-k').textContent = d.prediction.K.toFixed(2);
+    // Features grid
+    const feat = d.input_features || {};
+    const fhtml = Object.entries(feat).map(([k,v]) =>
+      `<div class="bg-gray-50 rounded-xl p-3">
+        <p class="text-xs text-gray-400 mb-0.5">${k}</p>
+        <p class="font-semibold text-gray-700">${typeof v === 'number' ? v.toFixed(3) : v}</p>
+      </div>`).join('');
+    document.getElementById('npk-features').innerHTML = fhtml;
+    document.getElementById('npk-result').classList.remove('hidden');
+  } catch(e) {
+    document.getElementById('npk-loading').classList.add('hidden');
+    document.getElementById('npk-error').classList.remove('hidden');
+    document.getElementById('npk-err-msg').textContent = 'Network error: ' + e.message;
+  }
+}
+
+// --- HISTORY ---
+async function loadHistory() {
+  const farmer = document.getElementById('hist-farmer').value;
+  const field = document.getElementById('hist-field').value;
+  const source = document.getElementById('hist-source').value;
+  const days = document.getElementById('hist-days').value || 30;
+  const tbody = document.getElementById('hist-body');
+  const thead = document.getElementById('hist-thead');
+  tbody.innerHTML = '<tr><td colspan="20" class="text-center py-8"><div class="flex justify-center"><div class="spinner"></div></div></td></tr>';
+
+  try {
+    const farmersToQuery = farmer ? [farmer] : ['Jaspreet', 'Netar', 'Muktiyar'];
+    const fieldsToQuery = field ? [field] : ['A', 'B'];
+
+    let allRecords = [];
+
+    for (const f of farmersToQuery) {
+      for (const fl of fieldsToQuery) {
+        try {
+          const res = await apiFetch(`/get_history?farmer=${encodeURIComponent(f)}&field=${encodeURIComponent(fl)}&days=${days}`);
+          const srcData = res && res.data ? res.data[source] : [];
+          if (Array.isArray(srcData)) {
+            srcData.forEach(item => {
+              if (!item.farmer) item.farmer = f;
+              if (!item.field) item.field = fl;
+              allRecords.push(item);
+            });
+          }
+        } catch (e) {
+          // Field might not exist for that farmer (e.g. Netar only has A)
+        }
+      }
+    }
+
+    // Sort by timestamp descending
+    allRecords.sort((a, b) => {
+      const da = new Date(a.timestamp?.$date || a.timestamp || 0);
+      const db = new Date(b.timestamp?.$date || b.timestamp || 0);
+      return db - da;
+    });
+
+    historyData = allRecords;
+
+    if (!historyData.length) {
+      tbody.innerHTML = '<tr><td colspan="20" class="text-center py-10 text-gray-400">No historical records found for the selected criteria</td></tr>';
+      document.getElementById('hist-count').textContent = '0 records';
+      return;
+    }
+
+    const skip = ['_id', '__v', 'farmer', 'field', 'timestamp', 'channel_id', 'entry_id'];
+    const otherKeys = Object.keys(historyData[0]).filter(k => !skip.includes(k));
+    const cols = ['farmer', 'field', 'timestamp', ...otherKeys];
+
+    thead.innerHTML = '<tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">' +
+      cols.map(c => `<th class="text-left px-4 py-3">${c}</th>`).join('') + '</tr>';
+
+    tbody.innerHTML = historyData.map(row =>
+      `<tr class="table-row border-t border-gray-50 text-gray-700">` +
+      cols.map(c => {
+        let val = row[c];
+        if (c === 'timestamp') val = fmtDate(val);
+        else if (typeof val === 'number') val = val.toFixed(val % 1 === 0 ? 0 : 3);
+        return `<td class="px-4 py-2.5 text-sm whitespace-nowrap">${val ?? '—'}</td>`;
+      }).join('') + `</tr>`
+    ).join('');
+    document.getElementById('hist-count').textContent = `${historyData.length} records`;
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="20" class="text-center py-8 text-red-400">Error fetching history: ${e.message}</td></tr>`;
+  }
+}
+
+function exportHistoryCSV() {
+  if (!historyData.length) { alert('No data to export. Fetch history first.'); return; }
+  const cols = Object.keys(historyData[0]).filter(k => k !== '_id');
+  let csv = cols.join(',') + '\n';
+  historyData.forEach(r => {
+    csv += cols.map(c => {
+      let v = r[c];
+      if (v && typeof v === 'object' && v.$date) v = new Date(v.$date).toISOString();
+      return '"' + String(v ?? '').replace(/"/g,'""') + '"';
+    }).join(',') + '\n';
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = `aahar_history_${source}_${Date.now()}.csv`;
+  a.click();
+}
+
+// --- GEE / NASA ---
+async function loadGEE() {
+  const farmer = document.getElementById('gee-farmer').value;
+  const geeContainer = document.getElementById('gee-cards');
+  const nasaContainer = document.getElementById('nasa-cards');
+  geeContainer.innerHTML = '<div class="card p-5 col-span-full flex items-center justify-center py-12"><div class="spinner"></div></div>';
+  nasaContainer.innerHTML = '<div class="col-span-3 flex items-center justify-center py-8"><div class="spinner"></div></div>';
+
+  try {
+    const data = await fetchAll(farmer);
+    const gee = data['GEE Data'];
+    const nasa = data['NASA LaRC Data'];
+
+    // GEE indices
+    const geeKeys = ['NDVI','EVI','ARI','CAI','CIRE','DWSI','GCVI','MCARI','SIPI'];
+    const geeColors = { NDVI:'green', EVI:'emerald', ARI:'red', CAI:'orange', CIRE:'purple', DWSI:'blue', GCVI:'teal', MCARI:'pink', SIPI:'indigo' };
+    const geeDesc = { NDVI:'Vegetation', EVI:'Enhanced Veg.', ARI:'Anthocyanin', CAI:'Cellulose Abs.', CIRE:'Red-Edge Chl.', DWSI:'Water Stress', GCVI:'Chlorophyll', MCARI:'Chlorophyll Abs.', SIPI:'Plant Stress' };
+
+    if (gee && gee !== 'No Data Available') {
+      let html = '';
+      for (const [fn, flds] of Object.entries(gee)) {
+        for (const [fl, d] of Object.entries(flds)) {
+          geeKeys.forEach(k => {
+            const v = d[k];
+            const c = geeColors[k] || 'gray';
+            html += `<div class="card p-4 border-t-2 border-${c}-400">
+              <p class="text-xs text-gray-400">${fn} / ${fl}</p>
+              <p class="text-sm font-semibold text-gray-700">${k}</p>
+              <p class="text-xs text-gray-400 mb-2">${geeDesc[k]||''}</p>
+              <p class="text-xl font-bold text-${c}-700">${fmt(v,4)}</p>
+            </div>`;
+          });
+        }
+      }
+      geeContainer.innerHTML = html || '<div class="col-span-5 text-center text-gray-400 py-6">No GEE data</div>';
+    } else {
+      geeContainer.innerHTML = '<div class="col-span-5 text-center text-gray-400 py-6">No satellite data available</div>';
+    }
+
+    // NASA
+    if (nasa && nasa !== 'No Data Available') {
+      let nhtml = '';
+      for (const [fn, flds] of Object.entries(nasa)) {
+        for (const [fl, d] of Object.entries(flds)) {
+          nhtml += `
+          <div class="card p-4 text-center">
+            <p class="text-xs text-gray-400">${fn} / ${fl}</p>
+            <p class="text-xs font-semibold text-gray-600 mb-1">Air Temp (T2M)</p>
+            <p class="text-2xl font-bold text-orange-600">${fmt(d.T2M,1)}°C</p>
+          </div>
+          <div class="card p-4 text-center">
+            <p class="text-xs text-gray-400">${fn} / ${fl}</p>
+            <p class="text-xs font-semibold text-gray-600 mb-1">Humidity (RH2M)</p>
+            <p class="text-2xl font-bold text-blue-600">${fmt(d.RH2M,1)}%</p>
+          </div>
+          <div class="card p-4 text-center">
+            <p class="text-xs text-gray-400">${fn} / ${fl}</p>
+            <p class="text-xs font-semibold text-gray-600 mb-1">Pressure (PS)</p>
+            <p class="text-2xl font-bold text-purple-600">${fmt(d.PS,2)} kPa</p>
+          </div>`;
+        }
+      }
+      nasaContainer.innerHTML = nhtml || '<div class="col-span-3 text-center text-gray-400 py-6">No NASA data</div>';
+    } else {
+      nasaContainer.innerHTML = '<div class="col-span-3 text-center text-gray-400 py-6">No NASA data available</div>';
+    }
+  } catch(e) {
+    geeContainer.innerHTML = `<div class="col-span-5 text-red-400 text-center py-6">Error: ${e.message}</div>`;
+    nasaContainer.innerHTML = '';
+  }
+}
+
+function refreshAll() {
+  allData = null;
+  const active = document.querySelector('.section.active');
+  if (active && active.id === 'sec-dashboard') loadDashboard();
+  else if (active && active.id === 'sec-all-farmers') applyFilters();
+  else if (active && active.id === 'sec-sensor-data') loadSensorCards();
+  else if (active && active.id === 'sec-satellite') loadGEE();
+}
+
+// Init
+loadDashboard();
+loadSensorCards();
+</script>
+</body>
+</html>

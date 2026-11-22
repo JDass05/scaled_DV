@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta http-equiv="refresh" content="0; url=login.html"/>
+<title>Aahar – Redirecting</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital,wght@0,400;1,400&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        body {
+            background-color: #f0fdf4;
+            font-family: sans-serif;
+        }
+        .hindi-title {
+            font-family: 'Tiro Devanagari Hindi', serif;
+            color: #facc15;
+        }
+    </style>
+</head>
+<body class="bg-green-50">
+<div class="flex h-screen">
+<aside class="w-64 bg-white shadow-md flex flex-col">
+<div class="p-6 text-center">
+<h1 class="text-4xl font-bold hindi-title">आहार</h1>
+</div>
+<nav class="flex-1 px-4 py-2 space-y-2">
+<a class="flex items-center px-4 py-2 text-gray-700 bg-green-100 rounded-lg" href="#">
+<span class="material-icons">dashboard</span>
+<span class="ml-3">Dashboard</span>
+</a>
+<a class="flex items-center px-4 py-2 text-gray-700 hover:bg-green-100 rounded-lg" href="#">
+<span class="material-icons">bug_report</span>
+<span class="ml-3">Disease Detection</span>
+</a>
+<a class="flex items-center px-4 py-2 text-gray-700 hover:bg-green-100 rounded-lg" href="#">
+<span class="material-icons transform -rotate-45">eco</span>
+<span class="ml-3">Crop Rotation</span>
+</a>
+<a class="flex items-center px-4 py-2 text-gray-700 hover:bg-green-100 rounded-lg" href="#">
+<span class="material-icons">analytics</span>
+<span class="ml-3">NPK Predictions</span>
+</a>
+<a class="flex items-center px-4 py-2 text-gray-700 hover:bg-green-100 rounded-lg" href="#">
+<span class="material-icons">storefront</span>
+<span class="ml-3">Marketplace</span>
+</a>
+<a class="flex items-center px-4 py-2 text-gray-700 hover:bg-green-100 rounded-lg" href="#">
+<span class="material-icons">settings</span>
+<span class="ml-3">Settings</span>
+</a>
+</nav>
+<div class="p-4">
+<a class="flex items-center px-4 py-2 text-gray-700 hover:bg-green-100 rounded-lg" href="#">
+<span class="material-icons">logout</span>
+<span class="ml-3">Logout</span>
+</a>
+</div>
+</aside>
+<div class="flex-1 flex flex-col overflow-hidden">
+<header class="bg-white shadow-sm">
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center">
+<h2 class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+</div>
+<div class="flex items-center space-x-4">
+<span class="material-icons text-gray-600">notifications</span>
+<div class="flex items-center">
+<div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+<div class="ml-2">
+<p class="text-sm font-semibold text-gray-800">John Doe</p>
+<p class="text-xs text-gray-500">Farmer</p>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 overflow-x-hidden overflow-y-auto bg-green-50 p-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 space-y-6">
+<div class="bg-white rounded-xl shadow-md p-6">
+<div class="flex justify-between items-start">
+<div class="flex-1">
+<div class="flex items-start">
+<span class="text-8xl font-bold text-gray-800" id="temperature">--</span>
+<span class="text-4xl font-bold text-gray-800 mt-3">°C</span>
+</div>
+<div class="flex items-center mt-2">
+<span class="material-icons text-gray-800">location_on</span>
+<span class="ml-1 text-xl text-gray-800" id="location">Loading...</span>
+</div>
+</div>
+<div class="flex flex-col items-center">
+<div class="relative">
+<img alt="weather icon" class="w-28 h-28" id="weather-icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDt8OtX0iao1CS9WiUgl-tgpW6z91-vShO80_-ciTsJLCXBdGjRdfX3QFS-Lt_Dd3D5JoFL9Z2A1E20NXj3XTyMPP6W_p_8PXu8yfzZqZqLP5Z8NVzqNp_IHIA5bNJF_zbzrApSoG71kiuaZdCIjci6L7Vv0fFF2FZ4KwhKgsCqBNmwEIGm7Z9SfEMmviE7cshqn-a5m5O089wFogHFNvULgSkQ_9RfjH8x0I1tdv7PZ0BlGqoXF6W4lGiM6RwSgUOKEgIeU2pfFIk"/>
+</div>
+<p class="text-xl text-gray-600 mt-2" id="weather-description">Loading...</p>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+<h2 class="text-2xl font-bold text-gray-800 flex items-center">Your Field <span class="material-icons ml-2">arrow_forward</span></h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="rounded-xl overflow-hidden">
+<img alt="Map showing a protected forest area with a pin on it" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClG3SsdSpiPvAsI44GaQjsWCsy9KXNeZLUrMMD_MqAF4iUdhPqx8Re6FYj47MT7MAuDe5IY8QZdGeC1eGtIYzqogPFS3NK5J2lGesiQfsntJnTqKXWM2Mis6PE_xM_4-Lo3scKZQ68eCEIPOQp2Hyz_Dwi5bPEiQH8l0ma8cRDuP6Utrh9RFwE8dSDdCF7wO9uJoPipiSBaP6gWJ5-S1K0ysakPsqpyZaFRQDe8JunZnZiX0VpYMLf2FidO2S4iDICo12IRuPxlE8"/>
+</div>
+<div class="space-y-4">
+<a class="flex items-center justify-between bg-gray-100 rounded-xl p-4 shadow-sm hover:bg-gray-200 transition" href="#">
+<span class="material-icons text-4xl text-gray-700">bug_report</span>
+<div class="text-lg font-semibold text-gray-800 mr-2">Disease<br/>Detection</div>
+<span class="material-icons text-gray-600">arrow_forward</span>
+</a>
+<a class="flex items-center justify-between bg-gray-100 rounded-xl p-4 shadow-sm hover:bg-gray-200 transition" href="#">
+<span class="material-icons text-4xl text-green-600 transform -rotate-45">eco</span>
+<div class="text-lg font-semibold text-gray-800 mr-2">Crop<br/>Rotation</div>
+<span class="material-icons text-gray-600">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-xl shadow-md p-6 space-y-4">
+<h3 class="font-bold text-2xl text-gray-800 flex justify-between items-center mb-2">
+<span>NPK Predictions</span>
+<span class="material-icons">arrow_forward</span>
+</h3>
+<div class="bg-gray-100 rounded-lg p-2">
+<img alt="A line graph showing NPK predictions over time" class="w-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvACSFlh3ncm-tvfJkUpG9ESWTqm98aK1Zk2KaP2G_yi2gpe2t_91wc7shxcGvQ_HIZG55GscECNbFjC3ND9Z-PYBhyD9NoxKnUtvmqnknBj5wGNzr6bvK2fPFB5EkVLIdJCbYYebCisS0qK-YHh5sZgrRQWXFfStEX5THfqRG6JGlPqUSAeHFE4-xi5fJ-gA0eZHVF07fEJ7pmVSnvbpHT87hOHwGDq6WTFJmTmigFVnazMn_oQiOss6WKzctiiBeXfpTsqSlNV8"/>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-white rounded-xl shadow-md p-4 text-center">
+<p class="font-semibold text-lg">Wind</p>
+<p class="text-2xl font-bold" id="wind">-- m/s</p>
+</div>
+<div class="bg-white rounded-xl shadow-md p-4 text-center">
+<p class="font-semibold text-lg">Visibility</p>
+<p class="text-2xl font-bold" id="visibility">-- KM</p>
+</div>
+<div class="bg-white rounded-xl shadow-md p-4 text-center">
+<p class="font-semibold text-lg">Humidity</p>
+<p class="text-2xl font-bold" id="humidity">--%</p>
+</div>
+<div class="bg-white rounded-xl shadow-md p-4 text-center">
+<p class="font-semibold text-lg">AQI</p>
+<p class="text-2xl font-bold" id="aqi">--</p>
+</div>
+</div>
+<a class="bg-white rounded-xl shadow-md p-6 flex justify-between items-center hover:bg-gray-50 transition" href="#">
+<h2 class="text-2xl font-bold text-gray-800 flex items-center">Marketplace <span class="material-icons ml-2">arrow_forward</span></h2>
+<div class="bg-green-500 rounded-full p-4">
+<span class="material-icons text-white text-3xl">storefront</span>
+</div>
+</a>
+<div class="bg-white rounded-xl shadow-md p-6">
+<h3 class="text-xl font-bold text-gray-800 mb-4">Upcoming Reminders</h3>
+<div class="space-y-4">
+<div class="flex items-center">
+<div class="bg-blue-100 rounded-full p-2">
+<span class="material-icons text-blue-500">water_drop</span>
+</div>
+<div class="ml-4">
+<p class="font-semibold">Irrigate Wheat Crop</p>
+<p class="text-sm text-gray-500">Today, 5:00 PM</p>
+</div>
+</div>
+<div class="flex items-center">
+<div class="bg-yellow-100 rounded-full p-2">
+<span class="material-icons text-yellow-500">shopping_cart</span>
+</div>
+<div class="ml-4">
+<p class="font-semibold">Buy new seeds</p>
+<p class="text-sm text-gray-500">Tomorrow, 9:00 AM</p>
+</div>
+</div>
+<div class="flex items-center">
+<div class="bg-red-100 rounded-full p-2">
+<span class="material-icons text-red-500">bug_report</span>
+</div>
+<div class="ml-4">
+<p class="font-semibold">Check for pests</p>
+<p class="text-sm text-gray-500">25 May, 2:00 PM</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+<script>
+        const apiKey = 'YOUR_OPENWEATHERMAP_API_KEY'; // Replace with your OpenWeatherMap API key
+        function getWeatherData(lat, lon) {
+            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+            const airPollutionUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+            fetch(weatherUrl)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('temperature').textContent = Math.round(data.main.temp);
+                    document.getElementById('location').textContent = data.name;
+                    document.getElementById('weather-description').textContent = data.weather[0].main;
+                    document.getElementById('weather-icon').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+                    document.getElementById('wind').textContent = `${data.wind.speed} m/s`;
+                    document.getElementById('visibility').textContent = `${data.visibility / 1000} KM`;
+                    document.getElementById('humidity').textContent = `${data.main.humidity}%`;
+                })
+                .catch(error => console.error('Error fetching weather data:', error));
+            fetch(airPollutionUrl)
+                .then(response => response.json())
+                .then(data => {
+                     document.getElementById('aqi').textContent = data.list[0].main.aqi;
+                })
+                .catch(error => console.error('Error fetching air pollution data:', error));
+        }
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    getWeatherData(lat, lon);
+                }, () => {
+                    // Fallback to a default location if user denies geolocation
+                    getWeatherData(30.37, 76.78); // Patiala coordinates
+                });
+            } else {
+                // Fallback for browsers that don't support Geolocation
+                getWeatherData(30.37, 76.78); 
+            }
+        }
+        window.onload = getLocation;
+    </script>
+
+</body></html>
